@@ -1,15 +1,17 @@
-import { DynamoDBClient, PutItemCommand, UpdateItemCommand } from "@aws-sdk/client-dynamodb"
+import { APIGatewayProxyEvent } from "aws-lambda"
+import { DynamoDBClient, PutItemCommand } from "@aws-sdk/client-dynamodb"
 
 const REGION = process.env.REGION
 
-// DB client
+//db client
 const ddbClient = new DynamoDBClient({ region: REGION, endpoint: "http://localhost:4566" })
-// const ACQUARIUM_QUEUE_NAMES = ["tropical_fish_aq", "red_fish_aq", "shark_aq"]
-let result
 
 //get timestamp
 let new_Date = Date.now().toString()
 let fullDate = new Date().toLocaleString()
+
+const ACQUARIUM_QUEUE_NAMES = ["tropical_fish_aq", "red_fish_aq", "shark_aq"]
+let result
 
 export const lambdaHandler = async (event: any) => {
   const tank = event.tank
@@ -18,14 +20,14 @@ export const lambdaHandler = async (event: any) => {
     const commandDB = new PutItemCommand({
       TableName: "Acquarium",
       Item: {
-        tank: { S: tank },
+        tank: { S: ACQUARIUM_QUEUE_NAMES[tank] },
         temperature: { S: (result = getValue(10, 35).toString() + "Celsius") },
         O2: { S: (result = getRandomHourMinute().toString() + "hh:mm") },
         lastEat: { S: (result = getRandomHourMinute().toString() + "hh:mm") },
-        waterChange: { S: fullDate },
+        waterChange: { S: (result = fullDate) },
         timeStamp: { S: new_Date },
         dayTime: { S: fullDate },
-        active: { BOOL: false },
+        active: { BOOL: true },
       },
     })
     const responseDB = await ddbClient.send(commandDB)
@@ -38,34 +40,11 @@ export const lambdaHandler = async (event: any) => {
     console.error(error)
   }
 
-  // const input = {
-  //   TableName: "Acquarium",
-  //   Key: {
-  //     tank: { S: ACQUARIUM_QUEUE_NAMES[tank] },
-  //   },
-  //   ExpressionAttributeNames: {
-  //     "#WC": "waterChange",
-  //   },
-  //   ExpressionAttributeValues: {
-  //     ":wc": {
-  //       S: getRandomHourMinute(),
-  //     },
-  //   },
-  //   ReturnValues: "ALL_NEW",
-  //   UpdateExpression: "SET #WC = :wc",
-  // }
-
-  // try {
-  //   const command = new UpdateItemCommand(input)
-
-  //   const responseDB = await ddbClient.send(command)
-  //   if (!responseDB) {
-  //   } else {
-  //     console.info("Database populated")
-  //   }
-  // } catch (error) {
-  //   console.error(error)
-  // }
+  function getValue(min: number, max: number) {
+    min = Math.ceil(min)
+    max = Math.floor(max)
+    return Math.floor(Math.random() * (max - min + 1) + min) // The maximum is inclusive and the minimum is inclusive
+  }
 
   function getRandomHourMinute(): string {
     const hour = Math.floor(Math.random() * 24)
@@ -75,11 +54,5 @@ export const lambdaHandler = async (event: any) => {
     const minuteString = minute.toString().padStart(2, "0")
 
     return `${hourString}:${minuteString}`
-  }
-
-  function getValue(min: number, max: number) {
-    min = Math.ceil(min)
-    max = Math.floor(max)
-    return Math.floor(Math.random() * (max - min + 1) + min) // The maximum is inclusive and the minimum is inclusive
   }
 }
