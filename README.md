@@ -11,7 +11,7 @@ AquaR.IoT ES represents a remarkable integration of cutting-edge technologies, e
 
 ![arch](./images/arch.png)
 
-There are some devices (simulated) that send datas to SQS queues and a lambda function that colud be triggered manually. This lambda does an average and saves datas on DynamoDB. All the datas are accessed by a Telegram bot. This bot can trigger IoT sensors and the lambda for store datas. It can also switch on or off sensors. It also offers a way to send recap emails to the user.
+There are some devices (simulated) that send datas to SQS queues and a lambda function that colud be triggered manually. All the datas are accessed by a Telegram bot. This bot can trigger IoT sensors and the lambda for store datas. It can also switch on or off sensors. It also offers a way to send recap emails to the user.
 
 ## Prerequisite
 - docker
