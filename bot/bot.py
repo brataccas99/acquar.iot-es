@@ -8,16 +8,10 @@ from telebot.types import ReplyKeyboardMarkup, KeyboardButton
 from telebot import types
 import subprocess
 import schedule
-import time
 
 
 # Load variables from .env file
 env_vars = dotenv_values(".env")
-
-# Extra commands
-# /clean - clear all table
-# /test - call lambda activeMonitoring
-# /end - delete all tables
 
 load_dotenv()
 

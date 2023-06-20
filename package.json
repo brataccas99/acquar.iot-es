@@ -8,7 +8,7 @@
     "build": "rmdir /s /q dist & tsc -p tsconfig.json",
     "start": "node ./dist/index.js && node ./dist/setup.js",
     "setup": "node ./dist/settings/populateDB.js && node ./dist/device.js",
-    "average": "node ./dist/functions/average.js",
+    "serve": "npm run build && npm run start && npm run setup && ./copy.bat",
     "dev": "nodemon --exec ts-node src/index.ts",
     "dev:setup": "nodemon --exec ts-node src/setup.ts",
     "dev:populate": "nodemon --exec ts-node src/settings/populateDB.ts",

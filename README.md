@@ -11,12 +11,13 @@ AquaR.IoT ES represents a remarkable integration of cutting-edge technologies, e
 
 ![arch](./images/arch.png)
 
-There are some devices (simulated) that send datas to SQS queues and a lambda function that colud be triggered manually. All the datas are accessed by a Telegram bot. This bot can trigger IoT sensors and the lambda for store datas. It can also switch on or off sensors. It also offers a way to send recap emails to the user.
+There are some devices (simulated) that send datas to SQS queues and a lambda function that could be triggered manually. All the datas are accessed by a Telegram bot. This bot can trigger IoT sensors and the lambda for store datas. It can also switch on or off sensors. It also offers a way to send recap emails to the user.
 
 ## Prerequisite
 - docker
 - Node.js
-- A telegram bot token
+- A telegram bot token and chat id
+- all the requirements to run a python bot (telebot etc..)
 
 ## How to run this project
 
@@ -24,7 +25,7 @@ There are some devices (simulated) that send datas to SQS queues and a lambda fu
 - run <code>docker run -d --rm -p 4566:4566 --name aws localstack/localstack:1.4</code>
 - run <code>npm install</code>
 - go into <code>deploy</code> and re-run the command above
-- in the root directory run <code>npm run build</code>
+- in the root directory run <code>npm run build</code> (or if you're lazy just run <code>npm run serve</code> and proceed to the email verification step)
 - run <code>npm run start</code>
 - run <code>npm run setup</code>
 - run <code>.\copy.bat</code>
@@ -37,9 +38,9 @@ After this, setup all the lamba functions:
 
 And then create the functions:
 
-- <code>aws lambda create-function --function-name offsensors --zip-file fileb://functions.zip --handler deploy/offSensors.lambdaHandler --runtime nodejs18.x --role arn:aws:iam::000000000000:role/lambdarole --endpoint-url=http://localhost:4566</code>
+- <code>aws lambda create-function --function-name offSensors --zip-file fileb://functions.zip --handler deploy/offSensors.lambdaHandler --runtime nodejs18.x --role arn:aws:iam::000000000000:role/lambdarole --endpoint-url=http://localhost:4566</code>
 
-- <code>aws lambda create-function --function-name onsensors --zip-file fileb://functions.zip --handler deploy/onSensors.lambdaHandler --runtime nodejs18.x --role arn:aws:iam::000000000000:role/lambdarole --endpoint-url=http://localhost:4566</code>
+- <code>aws lambda create-function --function-name onSensors --zip-file fileb://functions.zip --handler deploy/onSensors.lambdaHandler --runtime nodejs18.x --role arn:aws:iam::000000000000:role/lambdarole --endpoint-url=http://localhost:4566</code>
   
 - <code>aws lambda create-function --function-name offSensorAcquarium --zip-file fileb://functions.zip --handler deploy/offSensorAcquarium.lambdaHandler --runtime nodejs18.x --role arn:aws:iam::000000000000:role/lambdarole --endpoint-url=http://localhost:4566</code>
 
@@ -52,3 +53,18 @@ And then create the functions:
 - <code>aws lambda create-function --function-name waterClean --zip-file fileb://functions.zip --handler deploy/waterClean.lambdaHandler --runtime nodejs18.x --role arn:aws:iam::000000000000:role/lambdarole --endpoint-url=http://localhost:4566</code>
 
 - start the bot by typing: <code>python bot/bot.py</code>
+
+# Further details
+
+- the python bot has some scheduled job in order to give fishes the best of their life and receive notifications when an automatic action is performed 
+- there are some specific 'command & control' lambda services for actions to a single acquarium and some for every acquarium
+- all the fishes were so happy to live into these acquariums living their best life (for reference see videos of them in the standard project version)
+
+# Future work
+
+- adapt this project to work into a real world acquarium (as it's standard version)
+- more features for fishes games
+- migration from localstack to aws services
+- dedicated mobile app with chatbot (replacing the telegram bot)
+- introducing AI && ML services from aws iot to prevent infection and bacteria contained in the water
+- more fishes!  
