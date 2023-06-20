@@ -18,9 +18,9 @@ export const lambdaHandler = async (event: any) => {
       TableName: "Acquarium",
       Item: {
         tank: { S: tank },
-        temperature: { S: 0 + "Celsius" },
-        O2: { S: "00:00" + "hh:mm" },
-        lastEat: { S: "00:00" + "hh:mm" },
+        temperature: { S: 0 + " Celsius" },
+        O2: { S: "00:00" + " hh:mm" },
+        lastEat: { S: "00:00" + " hh:mm" },
         waterChange: { S: fullDate },
         timeStamp: { S: new_Date },
         dayTime: { S: fullDate },

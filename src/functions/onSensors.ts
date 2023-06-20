@@ -21,9 +21,9 @@ export const lambdaHandler = async (event: APIGatewayProxyEvent) => {
         TableName: "Acquarium",
         Item: {
           tank: { S: ACQUARIUM_QUEUE_NAMES[tank] },
-          temperature: { S: (result = getValue(10, 35).toString() + "Celsius") },
-          O2: { S: (result = getRandomHourMinute().toString() + "hh:mm") },
-          lastEat: { S: (result = getRandomHourMinute().toString() + "hh:mm") },
+          temperature: { S: (result = getValue(10, 35).toString() + " Celsius") },
+          O2: { S: (result = getRandomHourMinute().toString() + " hh:mm") },
+          lastEat: { S: (result = getRandomHourMinute().toString() + " hh:mm") },
           waterChange: { S: (result = fullDate) },
           timeStamp: { S: new_Date },
           dayTime: { S: fullDate },

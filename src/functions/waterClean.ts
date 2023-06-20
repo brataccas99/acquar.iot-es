@@ -1,45 +1,32 @@
 import { DynamoDBClient, UpdateItemCommand } from "@aws-sdk/client-dynamodb"
 
 const REGION = process.env.REGION
+const ENDPOINT = "http://localhost:4566"
+const TABLE_NAME = "Acquarium"
 
-//db client
-const ddbClient = new DynamoDBClient({ region: REGION, endpoint: "http://localhost:4566" })
-const ACQUARIUM_QUEUE_NAMES = ["tropical_fish_aq", "red_fish_aq", "shark_aq"]
-
-//get timestamp
-let fullDate = new Date().toLocaleString()
+const client = new DynamoDBClient({ region: REGION, endpoint: ENDPOINT })
 
 export const lambdaHandler = async (event: any) => {
   const tank = event.tank
+  const waterChange = new Date().toLocaleString()
 
-  try {
-    const commandDB = new UpdateItemCommand({
-      TableName: "Acquarium",
-      Key: {
-        tank: { S: ACQUARIUM_QUEUE_NAMES[tank] },
-      },
-      UpdateExpression: "SET waterChange = :waterChangeValue",
-      ExpressionAttributeValues: {
-        ":waterChangeValue": { S: fullDate },
-      },
-    })
-
-    const responseDB = await ddbClient.send(commandDB)
-    if (!responseDB) {
-    } else {
-      console.info("Database populated")
-    }
-  } catch (error) {
-    console.error(error)
+  const params = {
+    TableName: TABLE_NAME,
+    Key: {
+      tank: { S: tank },
+    },
+    UpdateExpression: "SET waterChange = :waterChange",
+    ExpressionAttributeValues: {
+      ":waterChange": { S: waterChange },
+    },
+    ReturnValues: "UPDATED_NEW",
   }
 
-  function getRandomHourMinute(): string {
-    const hour = Math.floor(Math.random() * 24)
-    const minute = Math.floor(Math.random() * 60)
-
-    const hourString = hour.toString().padStart(2, "0")
-    const minuteString = minute.toString().padStart(2, "0")
-
-    return `${hourString}:${minuteString}`
+  try {
+    const command = new UpdateItemCommand(params)
+    const response = await client.send(command)
+    console.log("Update succeeded:", JSON.stringify(response))
+  } catch (error) {
+    console.error("Unable to update item. Error:", error)
   }
 }
