@@ -1,0 +1,23 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Debug Lambda",
+            "program": "${workspaceFolder}/dist/functions/giveFoodAcquarium.js",
+            "env": {
+                "AWS_REGION": "us-east-1",
+                "AWS_ACCESS_KEY_ID": "test",
+                "AWS_SECRET_ACCESS_KEY": "test",
+                "AWS_LAMBDA_FUNCTION_NAME": "food24",
+                "AWS_LAMBDA_FUNCTION_VERSION": "$LATEST",
+                "LOCALSTACK_HOSTNAME": "localhost",
+                "LOCALSTACK_PORT": "4566"
+            },
+            "skipFiles": [
+                "<node_internals>/**"
+            ]
+        }
+    ]
+}
