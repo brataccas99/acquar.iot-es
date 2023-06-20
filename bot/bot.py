@@ -7,6 +7,8 @@ from botocore.exceptions import NoCredentialsError
 from telebot.types import ReplyKeyboardMarkup, KeyboardButton
 from telebot import types
 import subprocess
+import schedule
+import time
 
 
 # Load variables from .env file
@@ -97,10 +99,13 @@ def send_help(message):
     button_send_email = types.InlineKeyboardButton(
         "Send Email", callback_data="sendEmail"
     )
-    button_generateO2 = types.InlineKeyboardButton(
+    button_give_food_acquarium = types.InlineKeyboardButton(
         "Give Food Acquarium", callback_data="giveFoodAcquarium"
     )
-    button_give_food_acquarium = types.InlineKeyboardButton(
+    button_waterChange = types.InlineKeyboardButton(
+        "Clean water", callback_data="waterChange"
+    )
+    button_generateO2 = types.InlineKeyboardButton(
         "Generate O2", callback_data="generateO2"
     )
     button_activate_sensors = types.InlineKeyboardButton(
@@ -126,6 +131,7 @@ def send_help(message):
         button_send_email,
         button_generateO2,
         button_give_food_acquarium,
+        button_waterChange,
         button_activate_sensors,
         button_deactivate_sensors,
         button_switch_tank_on,
@@ -152,6 +158,8 @@ def handle_button_click(call):
         giveFoodAcquarium(call.message)
     elif call.data == "generateO2":
         generateO2(call.message)
+    elif call.data == "waterChange":
+        waterChange(call.message)
     elif call.data == "ONsensors":
         ONsensors(call.message)
     elif call.data == "OFFsensors":
@@ -333,6 +341,32 @@ def giveFoodAcquarium(message):
         bot.send_message(cid, f"Error toggling active status: {str(e)}")
 
 
+@bot.message_handler(commands=["waterChange"])
+def waterChange(message):
+    cid = message.chat.id
+    try:
+        table = dynamoDb.Table("Acquarium")
+        response = table.scan()
+        items = response["Items"]
+
+        tanks = list(set(item["tank"] for item in items))
+
+        if not tanks:
+            bot.send_message(cid, "No tanks found in the table.")
+            return
+
+        keyboard = ReplyKeyboardMarkup(row_width=2, one_time_keyboard=True)
+        buttons = [KeyboardButton(tank) for tank in tanks]
+        keyboard.add(*buttons)
+
+        bot.send_message(cid, "Select a tank:", reply_markup=keyboard)
+
+        bot.register_next_step_handler(message, process_waterChange)
+
+    except Exception as e:
+        bot.send_message(cid, f"Error toggling active status: {str(e)}")
+
+
 @bot.message_handler(commands=["generateO2"])
 def generateO2(message):
     cid = message.chat.id
@@ -360,6 +394,22 @@ def generateO2(message):
         bot.send_message(cid, f"Error toggling active status: {str(e)}")
 
 
+def process_waterChange(message):
+    cid = message.chat.id
+    tank = message.text
+
+    lambda_client = boto3.client("lambda", endpoint_url=url)
+    response = lambda_client.invoke(
+        FunctionName="waterChange",
+        InvocationType="RequestResponse",
+        Payload=json.dumps({"table": "Acquarium", "tank": tank}),
+    )
+    bot.send_message(
+        cid,
+        "water cleaned!, you should remove the dirty tank and place a clean water one",
+    )
+
+
 def process_giveFoodAcquarium(message):
     cid = message.chat.id
     tank = message.text
@@ -370,7 +420,7 @@ def process_giveFoodAcquarium(message):
         InvocationType="RequestResponse",
         Payload=json.dumps({"table": "Acquarium", "tank": tank}),
     )
-    bot.send_message(cid, "Done!")
+    bot.send_message(cid, "acquarium feeded!")
 
 
 def process_generateO2(message):
@@ -383,7 +433,7 @@ def process_generateO2(message):
         InvocationType="RequestResponse",
         Payload=json.dumps({"table": "Acquarium", "tank": tank}),
     )
-    bot.send_message(cid, "Done!")
+    bot.send_message(cid, "oxygen regenerated!")
 
 
 @bot.message_handler(commands=["switchSensorOn"])
@@ -465,5 +515,11 @@ def process_tank_selection_off(message):
     )
     bot.send_message(cid, "Done!")
 
+
+schedule.every(2).hours.do(generateO2)
+schedule.every(2).days.do(waterChange)
+schedule.every().day.at("07:00").do(giveFoodAcquarium)
+schedule.every().day.at("13:00").do(giveFoodAcquarium)
+schedule.every().day.at("19:00").do(giveFoodAcquarium)
 
 bot.polling()
