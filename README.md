@@ -21,6 +21,22 @@ There are some devices (simulated) that send datas to SQS queues and a lambda fu
 
 ## How to run this project
 
+- MANDATORY: create a telegram bot (from @botfather), retireve his chat id and put them in the .env file respectively, also put your aws ses verified email in the respective .env field
+
+## Easy way: One command setup
+
+- clone this repo: <code>https://github.com/brataccas99/acquar.iot-es</code>
+
+- write into a terminal from the root folder <code>aws ses verify-email-identity --email-address <your_email_address> --endpoint-url="http://localhost:4566"</code>
+
+- run <code>npm run firststart</code>
+
+- Open telegram and connect to your binded bot
+
+- enjoy
+
+## Dev way: multiple command setup
+
 - clone this repo: <code>https://github.com/brataccas99/acquar.iot-es</code>
 - run <code>docker run -d --rm -p 4566:4566 --name aws localstack/localstack:1.4</code>
 - run <code>npm install</code>
