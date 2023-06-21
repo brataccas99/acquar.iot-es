@@ -186,7 +186,7 @@ def generate_data(message):
         bot.send_message(cid, "Processing....")
         lambda_client = boto3.client("lambda", endpoint_url=url)
         response = lambda_client.invoke(
-            FunctionName="onsensors",
+            FunctionName="onSensors",
             InvocationType="RequestResponse",
             Payload=json.dumps({"cid": cid}),
         )
@@ -281,7 +281,7 @@ def OFFsensors(message):
     try:
         lambda_client = boto3.client("lambda", endpoint_url=url)
         response = lambda_client.invoke(
-            FunctionName="offsensors",
+            FunctionName="offSensors",
             InvocationType="RequestResponse",
             Payload=json.dumps({"cid": cid}),
         )
@@ -298,7 +298,7 @@ def ONsensors(message):
     try:
         lambda_client = boto3.client("lambda", endpoint_url=url)
         response = lambda_client.invoke(
-            FunctionName="onsensors",
+            FunctionName="onSensors",
             InvocationType="RequestResponse",
             Payload=json.dumps({"cid": cid}),
         )
@@ -394,7 +394,7 @@ def process_waterChange(message):
 
     lambda_client = boto3.client("lambda", endpoint_url=url)
     response = lambda_client.invoke(
-        FunctionName="waterChange",
+        FunctionName="waterClean",
         InvocationType="RequestResponse",
         Payload=json.dumps({"table": "Acquarium", "tank": tank}),
     )
@@ -490,7 +490,7 @@ def process_tank_selection_on(message):
 
     lambda_client = boto3.client("lambda", endpoint_url=url)
     response = lambda_client.invoke(
-        FunctionName="onsensorAcquarium",
+        FunctionName="onSensorAcquarium",
         InvocationType="RequestResponse",
         Payload=json.dumps({"table": "Acquarium", "tank": tank}),
     )
@@ -503,15 +503,15 @@ def process_tank_selection_off(message):
 
     lambda_client = boto3.client("lambda", endpoint_url=url)
     response = lambda_client.invoke(
-        FunctionName="offsensorAquarium",
+        FunctionName="offSensorAcquarium",
         InvocationType="RequestResponse",
         Payload=json.dumps({"table": "Acquarium", "tank": tank}),
     )
     bot.send_message(cid, "Done!")
 
 
-schedule.every(2).hours.do(generateO2)
-schedule.every(2).days.do(waterChange)
+schedule.every(5).seconds.do(generateO2)
+schedule.every(7).seconds.do(waterChange)
 schedule.every().day.at("07:00").do(giveFoodAcquarium)
 schedule.every().day.at("13:00").do(giveFoodAcquarium)
 schedule.every().day.at("19:00").do(giveFoodAcquarium)
