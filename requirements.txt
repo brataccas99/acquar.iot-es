@@ -1,0 +1,6 @@
+telebot
+boto3
+python-dotenv
+botocore
+schedule
+unittest2

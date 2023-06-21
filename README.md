@@ -29,6 +29,8 @@ There are some devices (simulated) that send datas to SQS queues and a lambda fu
 
 - write into a terminal from the root folder <code>aws ses verify-email-identity --email-address <your_email_address> --endpoint-url="http://localhost:4566"</code>
 
+- run code <code>pip install -r requirements.txt</code>
+
 - run <code>npm run firststart</code>
 
 - Open telegram and connect to your binded bot
@@ -41,6 +43,7 @@ There are some devices (simulated) that send datas to SQS queues and a lambda fu
 - run <code>docker run -d --rm -p 4566:4566 --name aws localstack/localstack:1.4</code>
 - run <code>npm install</code>
 - go into <code>deploy</code> and re-run the command above
+- run code <code>pip install -r requirements.txt</code>
 - in the root directory run <code>npm run build</code> (or if you're lazy just run <code>npm run serve</code> and proceed to the email verification step)
 - run <code>npm run start</code>
 - run <code>npm run setup</code>
