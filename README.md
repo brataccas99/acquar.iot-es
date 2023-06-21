@@ -1,5 +1,7 @@
 # AquaR.IoT ES: A Serverless Enhanced Aquarium with IoT ESP32 Board, AWS Services, and Telegram Integration
 
+![abstract](./images/acquariot.png)
+
 # Abstract:
 AquaR.IoT ES (Enhanced Serverless) is a captivating project that showcases the fusion of IoT, serverless programming, and cloud integration to create a cutting-edge aquarium experience. This project, in his standard version (here's the repo: <url>https://github.com/brataccas99/acquar.iot</url>), features a fully functional aquarium populated with mesmerizing red fishes, equipped with an IoT ESP32 board, an array of sensors, motors, clocks, bridges, and other IoT components. By leveraging the power of the Zerynth platform, Python, and Zerynth Cloud, users can remotely interact with the aquarium, issuing commands such as feeding the fishes, oxygen regeneration, and water cleaning while effortlessly gathering valuable statistical data through Ubidots.
 
