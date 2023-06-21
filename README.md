@@ -63,6 +63,7 @@ And then create the functions:
 # Future work
 
 - adapt this project to work into a real world acquarium (as it's standard version)
+- more unit tests (and complete what's not)
 - more features for fishes games
 - migration from localstack to aws services
 - dedicated mobile app with chatbot (replacing the telegram bot)

@@ -1,17 +1,47 @@
 import unittest
-from unittest.mock import MagicMock
-import telebot, types
+from unittest.mock import MagicMock, Mock, patch
+import types
 import subprocess
+import sys
+import os
+
 from dotenv import dotenv_values, load_dotenv
 
+# Get the directory path of bot.py
+bot_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "bot"))
+
+# Add the bot directory to the Python module search path
+sys.path.append(bot_dir)
+
+
+from bot.bot import (
+    lastEat,
+    O2,
+    first_start,
+    send_help,
+    generate_data,
+    activeSensorsValues,
+    sendEmail,
+    giveFoodAcquarium,
+    waterChange,
+    generateO2,
+    ONsensors,
+    OFFsensors,
+    switchSensorOn,
+    switchSensorOff,
+)
+
 env_vars = dotenv_values(".env")
+
+load_dotenv()
+
 TOKEN = env_vars["BOT_TOKEN"]
 CHAT_ID = env_vars["CHAT_ID"]
 
 
 class TestBot(unittest.TestCase):
     def setUp(self):
-        self.bot = telebot.TeleBot(TOKEN)
+        self.bot = TOKEN
         self.cid = CHAT_ID
         self.message = MagicMock()
         self.message.chat.id = self.cid
@@ -99,7 +129,146 @@ class TestBot(unittest.TestCase):
         )
         self.bot.send_message.assert_called_once_with(self.cid, "error generating data")
 
-    # Add more test cases for other functions
+    def test_retrieve_last_measurements_command(self):
+        self.bot.send_message = MagicMock()
+
+        activeSensorsValues(self.message)
+
+        self.bot.send_message.assert_called_once_with(
+            self.cid, "Retrieving last measurements..."
+        )
+
+    def test_O2_command(self):
+        self.bot.send_message = MagicMock()
+
+        O2(self.message)
+
+        self.bot.send_message.assert_called_once_with(self.cid, "Checking O2 levels...")
+
+    def test_lastEat_command(self):
+        self.bot.send_message = MagicMock()
+
+        lastEat(self.message)
+
+        self.bot.send_message.assert_called_once_with(
+            self.cid, "Checking last feed time..."
+        )
+
+    @patch("bot.send_email")
+    def test_sendEmail(mock_send_email):
+        message = Mock()
+        message.chat.id = 12345
+        message.text = "test@example.com"
+
+        sendEmail(message)
+
+        mock_send_email.assert_called_with(
+            "Email from bot_username",
+            mock_send_email(),
+            "bot_sender_email@example.com",
+            "test@example.com",
+        )
+
+    @patch("bot.boto3.client")
+    def test_giveFoodAcquarium(mock_boto3_client):
+        message = Mock()
+        message.chat.id = 12345
+        message.text = "Tank1"
+
+        giveFoodAcquarium(message)
+
+        mock_boto3_client.assert_called_with(
+            "lambda", endpoint_url="http://localhost:4566"
+        )
+        mock_boto3_client().invoke.assert_called_with(
+            FunctionName="giveFoodAcquarium",
+            InvocationType="RequestResponse",
+            Payload='{"table": "Acquarium", "tank": "Tank1"}',
+        )
+
+    @patch("bot.boto3.client")
+    def test_waterChange(mock_boto3_client):
+        message = Mock()
+        message.chat.id = 12345
+        message.text = "Tank1"
+
+        waterChange(message)
+
+        mock_boto3_client.assert_called_with(
+            "lambda", endpoint_url="http://localhost:4566"
+        )
+        mock_boto3_client().invoke.assert_called_with(
+            FunctionName="waterChange",
+            InvocationType="RequestResponse",
+            Payload='{"table": "Acquarium", "tank": "Tank1"}',
+        )
+
+    @patch("bot.boto3.client")
+    def test_generateO2(mock_boto3_client):
+        message = Mock()
+        message.chat.id = 12345
+        message.text = "Tank1"
+
+        generateO2(message)
+
+        mock_boto3_client.assert_called_with(
+            "lambda", endpoint_url="http://localhost:4566"
+        )
+        mock_boto3_client().invoke.assert_called_with(
+            FunctionName="generateO2",
+            InvocationType="RequestResponse",
+            Payload='{"table": "Acquarium", "tank": "Tank1"}',
+        )
+
+    @patch("bot.boto3.client")
+    def test_ONsensors(mock_boto3_client):
+        message = Mock()
+        message.chat.id = 12345
+
+        ONsensors(message)
+
+        mock_boto3_client.assert_called_with(
+            "lambda", endpoint_url="http://localhost:4566"
+        )
+        mock_boto3_client().invoke.assert_called_with(
+            FunctionName="onsensors",
+            InvocationType="RequestResponse",
+            Payload='{"cid": 12345}',
+        )
+
+    @patch("bot.boto3.client")
+    def test_OFFsensors(mock_boto3_client):
+        message = Mock()
+        message.chat.id = 12345
+
+        OFFsensors(message)
+
+        mock_boto3_client.assert_called_with(
+            "lambda", endpoint_url="http://localhost:4566"
+        )
+        mock_boto3_client().invoke.assert_called_with(
+            FunctionName="offSensors",
+            InvocationType="RequestResponse",
+            Payload='{"cid": 12345}',
+        )
+
+    def test_switchSensorOn_command(self):
+        self.bot.send_message = MagicMock()
+
+        switchSensorOn(self.message)
+
+        self.bot.send_message.assert_called_once_with(
+            self.cid, "Switching sensor ON..."
+        )
+
+    def test_switchSensorOff_command(self):
+        self.bot.send_message = MagicMock()
+
+        switchSensorOff(self.message)
+
+        self.bot.send_message.assert_called_once_with(
+            self.cid, "Switching sensor OFF..."
+        )
 
 
 if __name__ == "__main__":

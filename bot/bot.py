@@ -15,8 +15,8 @@ env_vars = dotenv_values(".env")
 
 load_dotenv()
 
-TOKEN = env_vars["BOT_TOKEN"]
-CHAT_ID = env_vars["CHAT_ID"]
+TOKEN = os.getenv("BOT_TOKEN")
+CHAT_ID = os.getenv("CHAT_ID")
 url = "http://localhost:4566"
 
 bot = telebot.TeleBot(TOKEN)
