@@ -1,5 +1,7 @@
 import json
 import os
+import threading
+import time
 import telebot
 import boto3
 from dotenv import dotenv_values, load_dotenv
@@ -14,6 +16,8 @@ import schedule
 env_vars = dotenv_values(".env")
 
 load_dotenv()
+
+stolen_message = None
 
 TOKEN = os.getenv("BOT_TOKEN")
 CHAT_ID = os.getenv("CHAT_ID")
@@ -80,6 +84,8 @@ def first_start(message):
 @bot.message_handler(commands=["help"])
 def send_help(message):
     cid = message.chat.id
+    global stolen_message
+    stolen_message = message
 
     # Create the inline buttons
     button_active_sensors = types.InlineKeyboardButton(
@@ -323,13 +329,19 @@ def giveFoodAcquarium(message):
             bot.send_message(cid, "No tanks found in the table.")
             return
 
+        if "schedule" in message.text:
+            for tank in tanks:
+                process_giveFoodAcquarium(message, tank)
+            bot.send_message(cid, "schedule completed")
+            return
+
         keyboard = ReplyKeyboardMarkup(row_width=2, one_time_keyboard=True)
         buttons = [KeyboardButton(tank) for tank in tanks]
         keyboard.add(*buttons)
 
         bot.send_message(cid, "Select a tank:", reply_markup=keyboard)
-
-        bot.register_next_step_handler(message, process_giveFoodAcquarium)
+        tank = message.text
+        bot.register_next_step_handler(message, process_giveFoodAcquarium, tank)
 
     except Exception as e:
         bot.send_message(cid, f"Error toggling active status: {str(e)}")
@@ -349,13 +361,19 @@ def waterChange(message):
             bot.send_message(cid, "No tanks found in the table.")
             return
 
+        if "schedule" in message.text:
+            for tank in tanks:
+                bot.register_next_step_handler(message, process_waterChange, tank)
+            bot.send_message(cid, "schedule completed")
+            return
+
         keyboard = ReplyKeyboardMarkup(row_width=2, one_time_keyboard=True)
         buttons = [KeyboardButton(tank) for tank in tanks]
         keyboard.add(*buttons)
 
         bot.send_message(cid, "Select a tank:", reply_markup=keyboard)
-
-        bot.register_next_step_handler(message, process_waterChange)
+        tank = message.text
+        process_waterChange(message, tank)
 
     except Exception as e:
         bot.send_message(cid, f"Error toggling active status: {str(e)}")
@@ -376,21 +394,27 @@ def generateO2(message):
             bot.send_message(cid, "No tanks found in the table.")
             return
 
+        if "schedule" in message.text:
+            for tank in tanks:
+                process_generateO2(message, tank)
+            bot.send_message(cid, "schedule completed")
+            return
+
         keyboard = ReplyKeyboardMarkup(row_width=2, one_time_keyboard=True)
         buttons = [KeyboardButton(tank) for tank in tanks]
         keyboard.add(*buttons)
 
         bot.send_message(cid, "Select a tank:", reply_markup=keyboard)
-
-        bot.register_next_step_handler(message, process_generateO2)
+        tank = message.text
+        bot.register_next_step_handler(message, process_generateO2, tank)
 
     except Exception as e:
         bot.send_message(cid, f"Error toggling active status: {str(e)}")
 
 
-def process_waterChange(message):
+def process_waterChange(message, tank):
     cid = message.chat.id
-    tank = message.text
+    tank = tank if tank else message.text
 
     lambda_client = boto3.client("lambda", endpoint_url=url)
     response = lambda_client.invoke(
@@ -400,13 +424,13 @@ def process_waterChange(message):
     )
     bot.send_message(
         cid,
-        "water cleaned!, you should remove the dirty tank and place a clean water one",
+        "water cleaned for {tank}!, you should remove the dirty tank and place a clean water one",
     )
 
 
-def process_giveFoodAcquarium(message):
+def process_giveFoodAcquarium(message, tank):
     cid = message.chat.id
-    tank = message.text
+    tank = tank if tank else message.text
 
     lambda_client = boto3.client("lambda", endpoint_url=url)
     response = lambda_client.invoke(
@@ -414,12 +438,12 @@ def process_giveFoodAcquarium(message):
         InvocationType="RequestResponse",
         Payload=json.dumps({"table": "Acquarium", "tank": tank}),
     )
-    bot.send_message(cid, "acquarium feeded!")
+    bot.send_message(cid, "acquarium feeded for {tank}!")
 
 
-def process_generateO2(message):
+def process_generateO2(message, tank):
     cid = message.chat.id
-    tank = message.text
+    tank = tank if tank else message.text
 
     lambda_client = boto3.client("lambda", endpoint_url=url)
     response = lambda_client.invoke(
@@ -427,7 +451,7 @@ def process_generateO2(message):
         InvocationType="RequestResponse",
         Payload=json.dumps({"table": "Acquarium", "tank": tank}),
     )
-    bot.send_message(cid, "oxygen regenerated!")
+    bot.send_message(cid, f"oxygen regenerated for {tank}!")
 
 
 @bot.message_handler(commands=["switchSensorOn"])
@@ -510,10 +534,46 @@ def process_tank_selection_off(message):
     bot.send_message(cid, "Done!")
 
 
-schedule.every(5).seconds.do(generateO2)
-schedule.every(7).seconds.do(waterChange)
-schedule.every().day.at("07:00").do(giveFoodAcquarium)
-schedule.every().day.at("13:00").do(giveFoodAcquarium)
-schedule.every().day.at("19:00").do(giveFoodAcquarium)
+schedule.every(5).seconds.do(
+    lambda: generateO2(
+        bot.send_message(chat_id=CHAT_ID, text="Executing generateO2 schedule")
+    )
+)
+schedule.every(2).days.do(
+    lambda: waterChange(
+        bot.send_message(chat_id=CHAT_ID, text="Executing waterChange schedule")
+    )
+)
 
-bot.polling()
+schedule.every().day.at("07:00").do(
+    lambda: giveFoodAcquarium(
+        bot.send_message(chat_id=CHAT_ID, text="Executing giveFoodAcquarium schedule")
+    )
+)
+
+schedule.every().day.at("13:00").do(
+    lambda: giveFoodAcquarium(
+        bot.send_message(chat_id=CHAT_ID, text="Executing giveFoodAcquarium schedule")
+    )
+)
+
+schedule.every().day.at("19:00").do(
+    lambda: giveFoodAcquarium(
+        bot.send_message(chat_id=CHAT_ID, text="Executing giveFoodAcquarium schedule")
+    )
+)
+
+
+def start_bot_polling():
+    bot.polling()
+
+
+# Create a separate thread for the bot's polling mechanism
+bot_thread = threading.Thread(target=start_bot_polling)
+
+# Start the bot thread
+bot_thread.start()
+
+while True:
+    schedule.run_pending()
+    time.sleep(1)  #
