@@ -534,7 +534,7 @@ def process_tank_selection_off(message):
     bot.send_message(cid, "Done!")
 
 
-schedule.every(5).seconds.do(
+schedule.every(2).hours.do(
     lambda: generateO2(
         bot.send_message(chat_id=CHAT_ID, text="Executing generateO2 schedule")
     )
