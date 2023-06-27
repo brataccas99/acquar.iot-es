@@ -363,7 +363,7 @@ def waterChange(message):
 
         if "schedule" in message.text:
             for tank in tanks:
-                bot.register_next_step_handler(message, process_waterChange, tank)
+                process_waterChange(message, tank)
             bot.send_message(cid, "schedule completed")
             return
 
@@ -373,7 +373,7 @@ def waterChange(message):
 
         bot.send_message(cid, "Select a tank:", reply_markup=keyboard)
         tank = None
-        process_waterChange(message, tank)
+        bot.register_next_step_handler(message, process_waterChange, tank)
 
     except Exception as e:
         bot.send_message(cid, f"Error toggling active status: {str(e)}")
