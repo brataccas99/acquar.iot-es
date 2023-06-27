@@ -340,7 +340,7 @@ def giveFoodAcquarium(message):
         keyboard.add(*buttons)
 
         bot.send_message(cid, "Select a tank:", reply_markup=keyboard)
-        tank = message.text
+        tank = None
         bot.register_next_step_handler(message, process_giveFoodAcquarium, tank)
 
     except Exception as e:
@@ -372,7 +372,7 @@ def waterChange(message):
         keyboard.add(*buttons)
 
         bot.send_message(cid, "Select a tank:", reply_markup=keyboard)
-        tank = message.text
+        tank = None
         process_waterChange(message, tank)
 
     except Exception as e:
@@ -405,7 +405,7 @@ def generateO2(message):
         keyboard.add(*buttons)
 
         bot.send_message(cid, "Select a tank:", reply_markup=keyboard)
-        tank = message.text
+        tank = None
         bot.register_next_step_handler(message, process_generateO2, tank)
 
     except Exception as e:
@@ -414,44 +414,44 @@ def generateO2(message):
 
 def process_waterChange(message, tank):
     cid = message.chat.id
-    tank = tank if tank else message.text
+    tank_local = tank if tank else message.text
 
     lambda_client = boto3.client("lambda", endpoint_url=url)
     response = lambda_client.invoke(
         FunctionName="waterClean",
         InvocationType="RequestResponse",
-        Payload=json.dumps({"table": "Acquarium", "tank": tank}),
+        Payload=json.dumps({"table": "Acquarium", "tank": tank_local}),
     )
     bot.send_message(
         cid,
-        "water cleaned for {tank}!, you should remove the dirty tank and place a clean water one",
+        f"water cleaned for {tank_local}!, you should remove the dirty tank and place a clean water one",
     )
 
 
 def process_giveFoodAcquarium(message, tank):
     cid = message.chat.id
-    tank = tank if tank else message.text
+    tank_local = tank if tank else message.text
 
     lambda_client = boto3.client("lambda", endpoint_url=url)
     response = lambda_client.invoke(
         FunctionName="giveFoodAcquarium",
         InvocationType="RequestResponse",
-        Payload=json.dumps({"table": "Acquarium", "tank": tank}),
+        Payload=json.dumps({"table": "Acquarium", "tank": tank_local}),
     )
-    bot.send_message(cid, "acquarium feeded for {tank}!")
+    bot.send_message(cid, f"acquarium feeded for {tank_local}!")
 
 
 def process_generateO2(message, tank):
     cid = message.chat.id
-    tank = tank if tank else message.text
+    tank_local = tank if tank else message.text
 
     lambda_client = boto3.client("lambda", endpoint_url=url)
     response = lambda_client.invoke(
         FunctionName="generateO2",
         InvocationType="RequestResponse",
-        Payload=json.dumps({"table": "Acquarium", "tank": tank}),
+        Payload=json.dumps({"table": "Acquarium", "tank": tank_local}),
     )
-    bot.send_message(cid, f"oxygen regenerated for {tank}!")
+    bot.send_message(cid, f"oxygen regenerated for {tank_local}!")
 
 
 @bot.message_handler(commands=["switchSensorOn"])
